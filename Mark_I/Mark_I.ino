@@ -87,17 +87,17 @@ int senos(){
   
   }
 int jojalu(){
-  int l[2][5]={{0,0,0,0,0},{0,150,255,150,0}};
-  for(int i=2;i<=12;i++){
-    for(int j=0;j<5;j++){
+  int l[2][7]={{0,0,0,0,0,0,0},{0,75,150,255,150,75,0}};
+  for(int i=3;i<=12;i++){
+    for(int j=0;j<7;j++){
       l[0][j]=i+j;
       if (l[0][j]>12){
-        l[0][j]=l[0][j] - 11;
+        l[0][j]=l[0][j] - 10;
       }
-      for(int h=0;h<5;h++){
-        analogWrite(l[0][h],l[1][h]);
-        delay(2);
+      for(int h=0;h<7;h++){
+          analogWrite(l[0][h],l[1][h]);
+          delay(2);
+        }
       }
-    }
-  }
+   }
 }
