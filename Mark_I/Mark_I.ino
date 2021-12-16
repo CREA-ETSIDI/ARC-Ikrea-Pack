@@ -32,7 +32,7 @@ void setup() {
 
 // the loop function runs over and over again forever
 void loop() {
-  jojalu();
+  polarJojaluh();
 }
 
 int intermitente(){
@@ -118,15 +118,15 @@ void inline polarJojaluh(void) {
     // We calculate the angle from the virtual rotatinng axis to it
     // There are two angles, anti- and clockwise, so we take the minimum
     ledAngle = static_cast<float>(led)/(nLeds+1) * TWO_PI;
-    angDist = min(abs(ledAngle - axisAngle), abs(TWO_PI + ledAngle - axisAngle )); // ledAngle and
-    if (angDist < HALF_AMP)
-      intensity = static_cast<int>(255*(HALF_AMP-angDist)/HALF_AMP + 0.5);
+    angDist = min(abs(ledAngle - axisAngle), abs(TWO_PI + ledAngle - axisAngle)); // Distance between angles should never be more than half circunference, so we compute the lower of the two possible angles
+    if (angDist < HALF_AMP) // Set brightness only when it is near the amplitude defined
+      intensity = static_cast<int>(255*(HALF_AMP-angDist)/HALF_AMP + 0.5); // The nearer to ledAngle, the brighter the LED
     else
       intensity = 0;
     analogWrite(led+3, intensity);
   }
   axisAngle += VANG;
-  if (axisAngle > TWO_PI)
+  if (axisAngle > TWO_PI) // Reset angle to 0 every virtual axis loop
     axisAngle = 0;
   delay(DELAY);
 }
