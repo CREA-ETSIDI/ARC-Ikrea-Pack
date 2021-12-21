@@ -1,64 +1,96 @@
 #include <ShiftRegister74HC595.h>
 
-#define LEDn 5
+#define CLK_T 10000
 
 int latchPin = 5;
 int clkPin = 6;
 int dataPin = 4;
-byte LEDs[LEDn] = {16, 8, 4, 2, 1};
-byte LEDp[LEDn] = {20, 50, 15, 5, 1};
 byte LED = 0;
+byte clk = 0b01000000;
+byte estado = 0;
+bool flag = 0;
+bool clock_flag = 1;
 
-unsigned long t = 0;
 unsigned long t_0 = 0;
 unsigned long t_1 = 0;
-byte contador = 0;
+unsigned long t_2 = 0;
+unsigned long t = 0;
+
 
 void setup() 
 {
-  //Serial.begin(115200);
+  Serial.begin(115200);
   pinMode(latchPin, OUTPUT);
   pinMode(dataPin, OUTPUT);  
   pinMode(clkPin, OUTPUT);
-  pinMode(13, OUTPUT);
+  digitalWrite(latchPin, HIGH);
+  pinMode(7,OUTPUT);
 }
 void loop() 
 {
   t = micros();
-  if(t - t_0 >= 10)
+  PORTB &= 0xFF&(flag<<5);
+  PORTB |= 0x00|(flag<<5);
+  
+  //Reloj
+  if(t - t_0 > CLK_T)
   {
-    LED = 0;
-    for(int i = 0; i < LEDn; i++)
-    {
-      if(contador < LEDp[i])
-      {
-        LED |= LEDs[i];
-      }
-    }
-    contador++;
-    contador = contador>50?0:contador;
-    shiftLED();
+    //Inicio Reloj
     t_0 = micros();
-  }
+    PORTD = (clk&0b00000001)?PORTD&clk:PORTD|clk;
+    clk = ~clk;
+    //Fin Reloj
 
-  if(t - t_1 >= 60000)
+    clock_flag = 1;
+  }
+  else if((t - t_0 >= CLK_T/2)*clock_flag)
   {
-    UpdateLEDs();
-    t_1 = micros();
+    Serial.println("A");
+    clock_flag = 0;
+    
+    flag = ((t - t_2) > 500000)?0:flag;
+    if(estado >= 8)
+    {
+      estado = 0;
+      //Latch a HIGH
+      PORTD |= 0b00100000;
+      
+      if(LED)
+        LED = LED<<1;
+      if(!LED)
+        LED = 1;
+      flag = 1;
+      t_2 = micros();
+    }
+    if((clk&0b01000000) == 0 && flag == 0)
+    {
+      //LATCH a LOW
+      PORTD &= 0b11011111;
+            
+      //DATA = 4
+      PORTD |= (((0x01<<estado)&LED)>>estado)<<4;
+      PORTD &= (((0xFE<<estado)&LED)>>estado)<<4;
+      estado++;
+      //Serial.println(estado);
+    }
+    //Serial.println((flag == 0)?'a':'b');
   }
 }
-void UpdateLEDs(){
-  for(int i = 0; i < LEDn; i++)
+void sinlibreria(){
+  int i=0;
+  
+  /*
+  if(LED)
   {
-    if(LEDs[i])
-    {
-      LEDs[i] = LEDs[i] << 1;
-    }
-    if(!LEDs[i])
-    {
-      LEDs[i] = 1;
-    }
+    LED = LED<<1;
   }
+  if(!LED)
+  {
+    LED = 1;
+  }
+  */
+  
+  delay(1000);
 }
 void conlibreria(){
   
@@ -68,13 +100,4 @@ void shiftLED()
    digitalWrite(latchPin, LOW);
    shiftOut(dataPin, clkPin, MSBFIRST, LED);
    digitalWrite(latchPin, HIGH);
-}
-
-void printBinary(byte inByte)
-{
-  for(int b = 7; b >= 1; b--)
-  {
-    Serial.print(bitRead(inByte, b));
-  }
-  Serial.println(bitRead(inByte, 0));
 }
